@@ -1,2 +1,2 @@
 # easy-server
-Simple server inspired 
+Developed for studying goals. Based on Oficial Rust Docs. 
