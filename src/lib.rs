@@ -1,7 +1,7 @@
-use std::{
-    net::{TcpListener, TcpStream}, 
-    io::{BufReader, prelude::*}
-};
+use std::{net::{TcpListener, TcpStream}, io::prelude::*, io};
+use std::time::Duration;
+
+pub mod http;
 
 pub fn run() {
     let listener = TcpListener::bind("127.0.0.1:7878").unwrap();
@@ -14,12 +14,16 @@ pub fn run() {
 
 fn handle(mut stream: TcpStream) {
     println!("handling the request");
-    let buf_reader = BufReader::new(&mut stream);
-    let http_request: Vec<_> = buf_reader
-        .lines()
-        .map(|result| result.unwrap())
-        .take_while(|line| !line.is_empty())
-        .collect();
+    stream.set_read_timeout(Some(Duration::from_millis(50))).unwrap();
+    let mut u8_vec: Vec<u8> = vec![];
+    loop {
+        match stream.read_to_end(&mut u8_vec) {
+            Ok(_) => {},
+            Err(ref e) if e.kind() == io::ErrorKind::WouldBlock => break,
+            Err(e) => panic!("Failed when reading incoming stream: {}", e),
+        }
+    }
+    let http_request = String::from_utf8(u8_vec).expect("Couldn't convert request to string");
     println!("{:#?}", http_request);
 
     let response = "HTTP/1.1 200 OK\r\n\r\n";
