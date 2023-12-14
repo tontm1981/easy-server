@@ -11,4 +11,12 @@ impl Request {
     pub fn method(&self) -> &str {
         &self.method
     }
+
+    pub fn route(&self) -> &str {
+        &self.route
+    }
+
+    pub fn protocol(&self) -> &str {
+        &self.protocol
+    }
 }
