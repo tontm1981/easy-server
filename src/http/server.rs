@@ -2,6 +2,8 @@ use std::io::{Error, Read, self, Write};
 use std::net::{TcpListener, TcpStream};
 use std::time::Duration;
 
+use super::request::Request;
+
 pub struct SingleServer(TcpListener);
 impl SingleServer {
     pub fn try_new(host: &str, port: u16) -> Result<Self, Error> {
@@ -19,6 +21,16 @@ impl SingleServer {
     }
 
     fn handle(&self, mut stream: TcpStream) -> Result<(), Error> {
+        let request_string = self.read_incoming_stream(&mut stream);
+        let request = self.build_request(request_string);
+
+
+
+        let response = "HTTP/1.1 200 OK\r\n\r\n".to_string();
+        self.write_response(response, stream)
+    }
+
+    fn read_incoming_stream(&self, stream: &mut TcpStream) -> String {
         let mut vec_u8: Vec<u8> = vec![];
         stream.set_read_timeout(Some(Duration::from_millis(75))).expect("Unable to set read timeout");
         loop {
@@ -28,10 +40,42 @@ impl SingleServer {
                 Err(e) => panic!("Failed to read incoming stream: {}", e),
             }
         }
-        let request = String::from_utf8(vec_u8).expect("Failed to convert request to string");
-        println!("Request: {request:#?}");
+        String::from_utf8(vec_u8).expect("Failed to convert request to string")
+    }
 
-        let response = "HTTP/1.1 200 OK\r\n\r\n";
+    fn build_request(&self, input: String) -> Request {
+        let parsed_request = self.parse_request_string(input);
+        let request = self.build_request_instance(parsed_request[0].to_owned());
+        println!("{parsed_request:#?}");
+        println!("{request:#?}");
+        request
+    }
+
+    fn build_request_instance(&self, input: String) -> Request {
+        let parsed_string: Vec<String> = input
+            .split(' ')
+            .map(|s| s.to_string())
+            .collect();
+        Request::new(
+            parsed_string[0].to_owned(), 
+            parsed_string[1].to_owned(), 
+            parsed_string[2].to_owned()
+        )
+    }
+
+    fn parse_request_string(&self, input: String) -> Vec<String> {
+        let splitted_string: Vec<String> = input
+            .split("\r\n")
+            .map(|s| s.to_string())
+            .collect();
+        splitted_string
+    }
+
+    pub fn pub_parse_request_string(&self, input: String) -> Vec<String> {
+        self.parse_request_string(input)
+    }
+
+    fn write_response(&self, response: String, mut stream: TcpStream) -> Result<(), Error> {
         stream.write_all(response.as_bytes()).expect("Unable to send response to client");
         Ok(())
     }
