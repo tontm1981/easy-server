@@ -17,6 +17,7 @@ type ApplicationMap = HashMap<
     String, 
     RouteMap
 >;
+
 pub struct Application (
     ApplicationMap
 );
@@ -62,7 +63,7 @@ impl Application {
     }
 
     fn route(&mut self, verb: &str, route: String, funcs: FunctionList) {
-        let mut map = self.0.remove(verb).unwrap();
+        let mut map = self.0.remove(verb).unwrap_or(HashMap::new());
         map.insert(route, funcs);
         self.0.insert(verb.to_string(), map);
     }
