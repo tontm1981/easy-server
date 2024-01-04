@@ -11,6 +11,5 @@ fn assert_single_server_is_runing() {
     });
     thread::sleep(Duration::from_millis(100));
     let response = reqwest::blocking::get("http://localhost:4545").expect("Failed to request single server");
-    println!("{:#?}", response);
     assert_eq!(response.status(), 200);
 }
