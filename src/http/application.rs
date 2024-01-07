@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use super::{request::Request, response::Response};
 
-type FunctionList = Vec<
+pub type FunctionList = Vec<
     Box<
         dyn Fn(&Request) -> Option<Response>
     >

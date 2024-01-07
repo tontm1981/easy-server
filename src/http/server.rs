@@ -1,15 +1,51 @@
 use std::io::{Error, Read, self, Write};
 use std::net::{TcpListener, TcpStream};
 use std::time::Duration;
+use super::{application::{Application, FunctionList}, request::Request};
 
-use super::request::Request;
-
-pub struct SingleServer(TcpListener);
+pub struct SingleServer(TcpListener, Application);
 impl SingleServer {
     pub fn try_new(host: &str, port: u16) -> Result<Self, Error> {
         let address = format!("{host}:{port}");
         let listener = TcpListener::bind(address).expect("Couldn't up the server");
-        Ok(Self(listener))
+        let handlers: Application = Application::new();
+        Ok(Self(listener, handlers))
+    }
+
+    pub fn connect(&mut self, route: String, f: FunctionList) {
+        self.1.connect(route, f);
+    }
+
+    pub fn delete(&mut self, route: String, f: FunctionList) {
+        self.1.delete(route, f);
+    }
+
+    pub fn get(&mut self, route: String, f: FunctionList) {
+        self.1.get(route, f);
+    }
+
+    pub fn head(&mut self, route: String, f: FunctionList) {
+        self.1.head(route, f);
+    }
+
+    pub fn options(&mut self, route: String, f: FunctionList) {
+        self.1.options(route, f);
+    }
+
+    pub fn patch(&mut self, route: String, f: FunctionList) {
+        self.1.patch(route, f);
+    }
+
+    pub fn post(&mut self, route: String, f: FunctionList) {
+        self.1.post(route, f);
+    }
+
+    pub fn put(&mut self, route: String, f: FunctionList) {
+        self.1.put(route, f);
+    }
+
+    pub fn trace(&mut self, route: String, f: FunctionList) {
+        self.1.trace(route, f);
     }
 
     pub fn run(&self) -> Result<(), Error> {
@@ -23,10 +59,7 @@ impl SingleServer {
     fn handle(&self, mut stream: TcpStream) -> Result<(), Error> {
         let request_string = self.read_incoming_stream(&mut stream);
         let request = self.build_request(request_string);
-
-
-
-        let response = "HTTP/1.1 200 OK\r\n\r\n".to_string();
+        let response = self.1.handle_request(request);
         self.write_response(response, stream)
     }
 
