@@ -1,4 +1,4 @@
-use easy_server::http::{server::SingleServer, application::Application, response::Response, request::{Request, self}};
+use easy_server::http::server::SingleServer;
 use crate::helpers::type_of::type_of;
 
 #[test]
