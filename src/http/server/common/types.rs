@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use std::io::Error;
-use crate::common::Request;
+use super::Request;
 
 pub type ApplicationMap = HashMap<String, RouteMap>;
 

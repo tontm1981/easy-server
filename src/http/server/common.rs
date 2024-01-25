@@ -1,9 +1,9 @@
 pub mod types;
 pub mod enums;
 
+use crate::http::server::common::enums::HttpStatuses;
 use std::collections::HashMap;
-use crate::common::enums::HttpStatuses;
-use crate::common::types::{ApplicationHandler, ApplicationMap, MiddlewareFunctionsVec, RouteMap};
+use self::types::{ApplicationHandler, ApplicationMap, MiddlewareFunctionsVec, RouteMap};
 
 type HeaderMap = HashMap<String, String>;
 

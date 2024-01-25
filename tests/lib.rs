@@ -3,8 +3,8 @@ mod integration {
     use std::io::Error;
     use std::thread;
     use std::time::Duration;
-    use easy_server::common::Request;
-    use easy_server::Server;
+    use easy_server::http::server::common::Request;
+    use easy_server::http::server::single::Server;
 
     #[test]
     fn assert_server_is_up_and_running() {
@@ -27,6 +27,7 @@ mod integration {
         thread::spawn(|| {
             let mut sut = create_new_server(5656);
             sut.get("/sleep".to_string(), |_: &Request| -> Result<Option<String>, Error> {
+                thread::sleep(Duration::from_secs(5));
                 Ok(None)
             });
             sut.run().unwrap();
