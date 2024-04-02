@@ -1,11 +1,28 @@
 pub mod types;
 pub mod enums;
+pub mod traits;
 
 use crate::http::server::common::enums::HttpStatuses;
 use std::collections::HashMap;
+use std::io::Error;
+use std::net::TcpListener;
 use self::types::{ApplicationHandler, ApplicationMap, MiddlewareFunctionsVec, RouteMap};
 
+pub const STREAM_READ_TIMEOUT: u64 = 50;
+pub const STREAM_WRITE_TIMEOUT: u64 = 50;
+
 type HeaderMap = HashMap<String, String>;
+
+pub fn get_tcp_listener_and_application(host: &str, port: usize) -> Result<(TcpListener, Application), Error> {
+    let address = format!("{host}:{port}");
+    match TcpListener::bind(address) {
+        Ok(listener) => {
+            let application = Application::new();
+            Ok((listener, application))
+        },
+        Err(e) => Err(e)
+    }
+}
 
 #[derive(Debug)]
 pub struct Request {

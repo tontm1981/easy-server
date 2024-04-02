@@ -2,13 +2,8 @@ use std::io::{Error, ErrorKind};
 use std::net::{TcpListener, TcpStream};
 use std::time::Duration;
 use std::io::prelude::*;
-use super::common::{
-    Application, 
-    Request, 
-    Response,
-    types::ApplicationHandler,
-    enums::HttpStatuses
-};
+use crate::http::server::common::traits::HttpServer;
+use super::common::{Application, Request, Response, types::ApplicationHandler, enums::HttpStatuses, STREAM_WRITE_TIMEOUT, STREAM_READ_TIMEOUT, get_tcp_listener_and_application};
 
 
 pub struct Server {
@@ -16,18 +11,10 @@ pub struct Server {
     application: Application
 }
 
-const STREAM_READ_TIMEOUT: u64 = 50;
-const STREAM_WRITE_TIMEOUT: u64 = 50;
-
 impl Server {
     pub fn try_new(host: &str, port: usize) -> Result<Self, Error> {
-        let address = format!("{host}:{port}");
-        let listener = TcpListener::bind(address);
-        let application = Application::new();
-        match listener {
-            Ok(listener) => Ok(Self { listener, application }),
-            Err(e) => Err(e)
-        }
+        let (listener, application) = get_tcp_listener_and_application(host, port)?;
+        Ok(Self { listener, application })
     }
 
     pub fn run(&mut self) -> Result<(), Error> {
@@ -39,42 +26,6 @@ impl Server {
             Server::handle_request(stream, application);
         }
         Ok(())
-    }
-
-    pub fn connect(&mut self, route: String, function: ApplicationHandler) {
-        self.application.connect(route, function);
-    }
-
-    pub fn delete(&mut self, route: String, function: ApplicationHandler) {
-        self.application.delete(route, function);
-    }
-
-    pub fn get(&mut self, route: String, function: ApplicationHandler) {
-        self.application.get(route, function);
-    }
-
-    pub fn head(&mut self, route: String, function: ApplicationHandler) {
-        self.application.head(route, function);
-    }
-
-    pub fn options(&mut self, route: String, function: ApplicationHandler) {
-        self.application.options(route, function);
-    }
-
-    pub fn patch(&mut self, route: String, function: ApplicationHandler) {
-        self.application.patch(route, function);
-    }
-
-    pub fn post(&mut self, route: String, function: ApplicationHandler) {
-        self.application.post(route, function);
-    }
-
-    pub fn put(&mut self, route: String, function: ApplicationHandler) {
-        self.application.put(route, function);
-    }
-
-    pub fn trace(&mut self, route: String, function: ApplicationHandler) {
-        self.application.trace(route, function);
     }
 
     fn get_request_as_string(mut stream: &TcpStream) -> String {
@@ -116,10 +67,48 @@ impl Server {
         handler
     }
 
-    fn handle_request(mut stream: TcpStream, mut application: Application) {
+    pub fn handle_request(mut stream: TcpStream, mut application: Application) {
         let request = Self::build_request_instance(&mut stream);
         let response = Self::build_response_instance(request, application);
         stream.write_all(response.to_string().as_bytes()).expect("Unable to send response to client");
         stream.flush().unwrap();
+    }
+}
+
+impl HttpServer for Server {
+    fn connect(&mut self, route: String, function: ApplicationHandler) {
+        self.application.connect(route, function);
+    }
+
+    fn delete(&mut self, route: String, function: ApplicationHandler) {
+        self.application.delete(route, function);
+    }
+
+    fn get(&mut self, route: String, function: ApplicationHandler) {
+        self.application.get(route, function);
+    }
+
+    fn head(&mut self, route: String, function: ApplicationHandler) {
+        self.application.head(route, function);
+    }
+
+    fn options(&mut self, route: String, function: ApplicationHandler) {
+        self.application.options(route, function);
+    }
+
+    fn patch(&mut self, route: String, function: ApplicationHandler) {
+        self.application.patch(route, function);
+    }
+
+    fn post(&mut self, route: String, function: ApplicationHandler) {
+        self.application.post(route, function);
+    }
+
+    fn put(&mut self, route: String, function: ApplicationHandler) {
+        self.application.put(route, function);
+    }
+
+    fn trace(&mut self, route: String, function: ApplicationHandler) {
+        self.application.trace(route, function);
     }
 }
