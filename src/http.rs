@@ -1,2 +1,2 @@
 pub mod common;
-mod single;
+pub mod single;

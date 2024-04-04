@@ -2,11 +2,12 @@ mod enums;
 
 use std::collections::HashMap;
 use std::io::Error;
+use std::rc::Rc;
 use crate::http::common::enums::Status;
 
 pub type MiddlewareList = Vec<Middleware>;
 
-pub type Middleware = Box<dyn Fn(&Request) -> Result<(), Error>>;
+pub type Middleware = Rc<dyn Fn(&Request) -> Result<(), Error>>;
 
 pub type ApplicationMap = HashMap<String, MethodsMap>;
 
@@ -48,12 +49,12 @@ impl Request {
     this.protocol = Some(protocol);
   }
 
-  pub fn set_headers(&mut self, headers: HeaderMap) {
+  pub fn set_headers(&mut self, headers: HeadersMap) {
     self.headers = headers;
   }
 
   pub fn add_header(&mut self, header_key: String, header_value: String) {
-    self.headers.append(header_key, header_value);
+    self.headers.insert(header_key, header_value);
   }
 
   pub fn set_content(&mut self, content: Vec<u8>) {
@@ -241,10 +242,10 @@ impl Application {
   }
 
   pub fn middlewares(&self) -> MiddlewareList {
-    self.middlewares
-      .iter()
-      .clone()
-      .collect()
+    let cloned = self
+      .middlewares
+      .to_vec();
+    cloned
   }
 
   pub fn set_handlers(this: &mut Self, handlers: ApplicationMap) {
